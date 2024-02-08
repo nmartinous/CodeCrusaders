@@ -5,9 +5,6 @@ from langchain_community.llms import Ollama
 # Save the llm as an Ollama object
 llm = Ollama(model="deepseek-coder:latest")
 
-# Total time 
-total_time = 0
-
 # Application title
 st.title("RiteSolutions GenAI Chat")
 
@@ -29,6 +26,8 @@ def empty_history():
 # Initialize chat history
 if "messages" not in st.session_state:
     empty_history()
+
+select = st.selectbox("Select Model: ", ["Select", "tinyllama:latest", "llama2:latest", "deepseek-coder:latest"])
 
 # Prompt the user 
 prompt = st.chat_input("Enter prompt:")
@@ -63,8 +62,5 @@ if prompt:
     # End the response timer, evaluate time to finsish, and output result
     end_time = time.time()
     elapsed_time = end_time - start_time
-    total_time += elapsed_time
     time_message = f"Model took {elapsed_time} seconds to respond this turn"
-    total_time_message = f"Model has taken {total_time} total seconds to get to this point"
     st.success(time_message)
-    st.success(total_timetime_message)
