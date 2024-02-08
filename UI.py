@@ -1,3 +1,12 @@
+# CURRENT MAIN OBJECTIVE (NOLAN)
+# Figure out how to have multiple chat histories and how to save them even
+# when the app is closed. Likely will use a sidebar that allows the user
+# to look through chats, name them, delete them, see how much space they
+# take up, and when they were last used. Find a way to display time to run
+# under each prompt call as well as a total at the bottom. Find a way to
+# display which model was used for a response in the case of multiple
+# models being used in a single chat history.
+
 import time
 import streamlit as st 
 from langchain_community.llms import Ollama
