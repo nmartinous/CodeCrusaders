@@ -12,6 +12,17 @@ st.title("RiteSolutions GenAI Chat")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Response generation
+def generate_response(prompt, history):
+
+    # Create a prompt chain using past prompts and responses
+    prompt_chain = ""
+    for log in history:
+        prompt_chain += " " + log["content"]
+
+    # Return the response from the llm
+    return llm.invoke(prompt_chain)
+
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -38,8 +49,8 @@ with colA:
         # Add the prompt to the chat history as a user prompt
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-        # Use the stored llm to respond to the prompt and save to response
-        response = llm.invoke(prompt)
+        # Use generate_response method to create a response
+        response = generate_response(prompt, st.session_state.messages)
 
         # Add the response to the chat history as an assistant response
         st.session_state.messages.append({"role": "assistant", "content": response})
