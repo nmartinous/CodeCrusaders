@@ -13,3 +13,5 @@ Planned Changes:
     - Possibly make a function that looks for and copies generated code into a
     matching file type, runs it, and reports errors
     - Automatic tracking of metrics
+        - If able to track if errors occur in generated code:
+            - Return what type of error to see if llms frequent the same error
