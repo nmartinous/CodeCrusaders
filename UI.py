@@ -5,9 +5,6 @@ from langchain_community.llms import Ollama
 # Save the llm as an Ollama object
 llm = Ollama(model="deepseek-coder:latest")
 
-# Application title
-st.title("RiteSolutions GenAI Chat")
-
 # Response generation
 def generate_response(prompt, history):
 
@@ -27,7 +24,11 @@ def empty_history():
 if "messages" not in st.session_state:
     empty_history()
 
-select = st.selectbox("Select Model: ", ["Select", "tinyllama:latest", "llama2:latest", "deepseek-coder:latest"])
+# Company logo
+st.image('RSLogo.png')
+
+# Application title
+st.title("Generative AI Coding Chat")
 
 # Prompt the user 
 prompt = st.chat_input("Enter prompt:")
@@ -37,7 +38,7 @@ st.write("")
 
 # History clearing button
 if st.button("CLEAR HISTORY", key="button"):
-        empty_history()
+    empty_history()
 
 # After the user hits enter or clicks the send button
 if prompt:
