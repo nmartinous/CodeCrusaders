@@ -33,6 +33,8 @@ response = ""
 st.write("")
 st.write("")
 
+if st.button("CLEAR HISTORY", key="button"):
+        empty_history()
 
 # After the user hits enter or clicks the send button
 if prompt:
