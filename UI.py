@@ -8,10 +8,6 @@ llm = Ollama(model="deepseek-coder:latest")
 # Application title
 st.title("RiteSolutions GenAI Chat")
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 # Response generation
 def generate_response(prompt, history):
 
@@ -23,10 +19,13 @@ def generate_response(prompt, history):
     # Return the response from the llm
     return llm.invoke(prompt_chain)
 
-# Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Clear chat history
+def empty_history():
+    st.session_state.messages = []
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    empty_history()
 
 # Prompt the user 
 prompt = st.chat_input("Enter prompt:")
@@ -50,8 +49,10 @@ if prompt:
     # Add the response to the chat history as an assistant response
     st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Output the response
-    st.write(response)
+    # Display chat messages from history, as well as new response
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
     # End the response timer, evaluate time to finsish, and output result
     end_time = time.time()
