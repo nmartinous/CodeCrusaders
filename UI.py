@@ -1,3 +1,6 @@
+import time
+import streamlit as st 
+from langchain_community.llms import Ollama
 llm = Ollama(model="tinyllama:latest")
 
 st.title("RiteSolutions GenAI Chat")
