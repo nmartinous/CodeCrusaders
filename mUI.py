@@ -5,7 +5,7 @@ import time
 st.markdown("# Tesing UI")
 
 #llm = Ollama(model="tinyllama") # 👈 stef default
-select = st.selectbox("Model: ", ["Select","tinyllama", "llama2"])
+select = st.selectbox("Model: ", ["Select","tinyllama", "llama2", "deepseek-coder:latest"])
 llm = Ollama(model = select)
 
 colA, colB = st.columns([.90, .10])
