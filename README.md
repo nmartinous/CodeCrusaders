@@ -15,3 +15,11 @@ Planned Changes:
     - Automatic tracking of metrics
         - If able to track if errors occur in generated code:
             - Return what type of error to see if llms frequent the same error
+
+Installation (Will be improved at a later date):
+    For linux or wsl:
+    enter 'curl https://ollama.ai/install.sh | sh' in terminal to install Ollama
+    enter 'ollama run <model:version> to install model (e.g. ollama run deepseek-coder-latest)
+    enter /bye to close llm, it is now downloaded for future use
+    use pip to install streamlit and langchain-community (pip install streamlit langchain-community)
+    run the application by entering 'streamlit run UI.py'
