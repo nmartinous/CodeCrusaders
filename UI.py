@@ -1,5 +1,13 @@
 # CURRENT MAIN OBJECTIVE
-# Allow for downloading new models through interface
+# Allow for downloading different model versions
+# Download polish
+# Allow for switching versions of a model
+# (remove current automatic :latest usage and update downloading to take suffix into acount)
+# > still remove suffix when in dropdown - change it from llama2:latest to llama2 (latest) for example
+# Add option to delete models
+# Add functionality to check if selected model is not downloaded properly, and download it if this is the case
+# ^ This can eventually include scanning website for new updates
+# ^ Try to scan website for model names to make installing easier anyways
 
 
 # NEXT MAIN OBJECTIVE
@@ -23,18 +31,21 @@ from datetime import date
 from langchain_community.llms import Ollama
 from waiting import wait
 
+# Import script for donwloading models
 from download_model import download
 
 # For storing and handling past chats
 class Chat:
 
+    # Constructor
     def __init__(self, messages):
-        self.messages = messages
+        self.messages = messages  # Chat history (both prompts and responses)
 
-
+    # Add a new message (prompt or response) to messages
     def add_message(self, messages):
         self.messages = messages
 
+# Create an empty placeholder Chat object
 current_chat = Chat("")
 
 # Response generation
@@ -70,21 +81,28 @@ st.title("Generative AI Coding Chat")
 
 llm_list = []
 
+# Open the llm file and save each llm to llm_list
 with open('model_list.txt') as file:
     llm_list = file.readlines()
 
 index = 0
+# For each llm in the file:
 for option in llm_list:
+    # Strip the \n elements
     llm_list[index] = option.strip().replace('\n', '')
     index += 1
 
 # Select the llm
 select = st.selectbox("Select Model: ", llm_list)
 
+# Allow user to download a new model
 new_model = st.chat_input("Download a new model?")
 if new_model:
+    # Use download function from download_model.py
     status = download(new_model)
+    # Wait for model to download with a 30 minute timeout
     wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
+    # Write model name to a new file
     f = open('model_list.txt', 'a')
     f.write("\n" + new_model)
     f.close()
@@ -92,15 +110,6 @@ if new_model:
 # Ensure that the model variation is latest
 selected_model = select + ":latest"
 
-# -Add funtionality to choose between sizes, version, as well as download new models
-# -Ideally the model selection will be empty on first run and the user will be
-#   able to download any model that Ollama supports.
-# -This will likely be done by using a text file to keep track of the models the user
-#   downloaded so that the user can add and delete models. This file's contents would
-#   then be passed as the list for the selectbox above.
-# -In order to download new models, an 'Ollama run <model:version> call must be made
-#   to the terminal, followed by a '/bye' call to close it. This will likely be handled
-#   in a seperate script.
 # -Deletion involves a different call and will be handled later
 # -Model updating should be looked into as well
 # -Finding a way to automatically find which models ollama offers, as well as information
@@ -153,4 +162,5 @@ if prompt:
     time_message = f"Model took {elapsed_time} seconds to respond"
     st.success(time_message)
 
+    # Print currently store chat messages
     st.info(current_chat.messages)
