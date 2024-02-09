@@ -108,7 +108,7 @@ if new_model:
     f.close()
 
 # Ensure that the model variation is latest
-selected_model = select + ":latest"
+# selected_model = select + ":latest"
 
 # -Deletion involves a different call and will be handled later
 # -Model updating should be looked into as well

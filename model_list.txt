@@ -1,4 +1,4 @@
-deepseek-coder 
-tinyllama
-llama2
-tinydolphin
+deepseek-coder:latest
+tinyllama:latest
+llama2:latest
+tinydolphin:latest
