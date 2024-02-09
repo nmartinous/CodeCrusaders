@@ -118,7 +118,7 @@ if new_model:
 #   seems to be the most practical at the time being. Having multiple options can not hurt.
 
 # Save the llm as an Ollama object
-llm = Ollama(model = selected_model)
+llm = Ollama(model = select)
 
 # Prompt the user 
 prompt = st.chat_input("Enter prompt:")
@@ -142,19 +142,20 @@ if prompt:
     # Update current chat's message history
     current_chat.add_message(st.session_state.messages)
 
-    # Use generate_response method to create a response
-    response = generate_response(prompt, st.session_state.messages)
+    with st.spinner('Generating reponse...'):
+        # Use generate_response method to create a response
+        response = generate_response(prompt, st.session_state.messages)
 
-    # Add the response to the chat history as an assistant response
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        # Add the response to the chat history as an assistant response
+        st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Update current chat's message history
-    current_chat.add_message(st.session_state.messages)
+        # Update current chat's message history
+        current_chat.add_message(st.session_state.messages)
 
-    # Display chat messages from history, as well as new response
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        # Display chat messages from history, as well as new response
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
     # End the response timer, evaluate time to finsish, and output result
     end_time = time.time()
