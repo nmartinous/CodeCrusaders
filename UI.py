@@ -1,4 +1,8 @@
-# CURRENT MAIN OBJECTIVE (NOLAN)
+# CURRENT MAIN OBJECTIVE
+# Allow for downloading new models through interface
+
+
+# NEXT MAIN OBJECTIVE
 # Figure out how to have multiple chat histories and how to save them even
 # when the app is closed. Likely will use a sidebar that allows the user
 # to look through chats, name them, delete them, see how much space they
@@ -7,9 +11,31 @@
 # display which model was used for a response in the case of multiple
 # models being used in a single chat history.
 
+# ^ Currently saves history to a chat object
+# need to add way to write to file
+# need to add way to name the chat
+# etc etc
+
 import time
+import os.path
 import streamlit as st 
+from datetime import date
 from langchain_community.llms import Ollama
+from waiting import wait
+
+from download_model import download
+
+# For storing and handling past chats
+class Chat:
+
+    def __init__(self, messages):
+        self.messages = messages
+
+
+    def add_message(self, messages):
+        self.messages = messages
+
+current_chat = Chat("")
 
 # Response generation
 def generate_response(prompt, history):
@@ -22,13 +48,19 @@ def generate_response(prompt, history):
     # Return the response from the llm
     return llm.invoke(prompt_chain)
 
-# Clear chat history
-def empty_history():
+# Create new chat
+def new_chat():
+
+    # Clear the session state messages
     st.session_state.messages = []
+
+    # Create and return a new chat
+    chat = Chat(st.session_state.messages)
+    return chat    
 
 # Initialize chat history
 if "messages" not in st.session_state:
-    empty_history()
+    current_chat = new_chat()
 
 # Company logo
 st.image('RSLogo.png')
@@ -36,8 +68,26 @@ st.image('RSLogo.png')
 # Application title
 st.title("Generative AI Coding Chat")
 
+llm_list = []
+
+with open('model_list.txt') as file:
+    llm_list = file.readlines()
+
+index = 0
+for option in llm_list:
+    llm_list[index] = option.strip().replace('\n', '')
+    index += 1
+
 # Select the llm
-select = st.selectbox("Select Model: ", ["deepseek-coder", "tinyllama", "llama2"])
+select = st.selectbox("Select Model: ", llm_list)
+
+new_model = st.chat_input("Download a new model?")
+if new_model:
+    status = download(new_model)
+    wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
+    f = open('model_list.txt', 'a')
+    f.write("\n" + new_model)
+    f.close()
 
 # Ensure that the model variation is latest
 selected_model = select + ":latest"
@@ -67,9 +117,9 @@ response = ""
 st.write("")
 st.write("")
 
-# History clearing button
+# New chat button
 if st.button("CLEAR HISTORY", key="button"):
-    empty_history()
+    current_chat = new_chat()
 
 # After the user hits enter or clicks the send button
 if prompt:
@@ -80,11 +130,17 @@ if prompt:
     # Add the prompt to the chat history as a user prompt
     st.session_state.messages.append({"role": "user", "content": prompt})
 
+    # Update current chat's message history
+    current_chat.add_message(st.session_state.messages)
+
     # Use generate_response method to create a response
     response = generate_response(prompt, st.session_state.messages)
 
     # Add the response to the chat history as an assistant response
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+    # Update current chat's message history
+    current_chat.add_message(st.session_state.messages)
 
     # Display chat messages from history, as well as new response
     for message in st.session_state.messages:
@@ -96,3 +152,5 @@ if prompt:
     elapsed_time = end_time - start_time
     time_message = f"Model took {elapsed_time} seconds to respond"
     st.success(time_message)
+
+    st.info(current_chat.messages)
