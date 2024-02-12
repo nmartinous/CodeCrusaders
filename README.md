@@ -1,25 +1,22 @@
 # CodeCrusaders
 Using Local LLMs to Support Software Development and Test
 
-Planned Changes:
-	- Change current process of having one chat log that has a deleting history
-    to a process that allows the user to have multiple chat histories, being 
-    able to save them to files for export and switch between them in app
-    - Integrate drop down to select llm with current version of ui that allows
-    for chat history
-        - State which llm operated on each chat within chat history for context
-        and clarity
-    - Improve aestheics
-    - Possibly make a function that looks for and copies generated code into a
-    matching file type, runs it, and reports errors
-    - Automatic tracking of metrics
-        - If able to track if errors occur in generated code:
-            - Return what type of error to see if llms frequent the same error
+Planned Features:
+- Right sidebar with secondary functions
+	- Adding new models (done but not moved)
+   	- Deleting models
+   	- Search for new models
+- Left sidebar with chat histories
+- Allow user to read model information from within app
+  	- Must somehow read info from ollama's website
+- Auto generated metrics and visuals
+  	- Model step timer is done already
+  	- Time per token
+  	- Time to first token
+  	- CPU usage
+  	- etc.
+  		- Create tables, graphs, and/or other viusals for easy analysis
+- Create a way to compare two or more models by running them side by side with the same prompt
 
-Installation (Will be improved at a later date):
-    For linux or wsl:
-    enter 'curl https://ollama.ai/install.sh | sh' in terminal to install Ollama
-    enter 'ollama run <model:version> to install model (e.g. ollama run deepseek-coder-latest)
-    enter /bye to close llm, it is now downloaded for future use
-    use pip to install streamlit and langchain-community (pip install streamlit langchain-community)
-    run the application by entering 'streamlit run UI.py'
+Installation Guide (Will be turned into full document at a later date):
+- run 'python3 code_crusaders.py' to check for/install dependencies and run ui
