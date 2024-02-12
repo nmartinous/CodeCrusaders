@@ -1,38 +1,14 @@
-# CURRENT MAIN OBJECTIVE
-# Allow for downloading different model versions
-# Download polish
-# Allow for switching versions of a model
-# (remove current automatic :latest usage and update downloading to take suffix into acount)
-# > still remove suffix when in dropdown - change it from llama2:latest to llama2 (latest) for example
-# Add option to delete models
-# Add functionality to check if selected model is not downloaded properly, and download it if this is the case
-# ^ This can eventually include scanning website for new updates
-# ^ Try to scan website for model names to make installing easier anyways
-
-
-# NEXT MAIN OBJECTIVE
-# Figure out how to have multiple chat histories and how to save them even
-# when the app is closed. Likely will use a sidebar that allows the user
-# to look through chats, name them, delete them, see how much space they
-# take up, and when they were last used. Find a way to display time to run
-# under each prompt call as well as a total at the bottom. Find a way to
-# display which model was used for a response in the case of multiple
-# models being used in a single chat history.
-
-# ^ Currently saves history to a chat object
-# need to add way to write to file
-# need to add way to name the chat
-# etc etc
-
+import datetime
 import time
 import os.path
 import streamlit as st 
-from datetime import date
 from langchain_community.llms import Ollama
 from waiting import wait
 
-# Import script for donwloading models
+# Import script for downloading models
 from download_model import download
+# Import script for removing models
+from remove_model import remove
 
 # For storing and handling past chats
 class Chat:
@@ -40,13 +16,28 @@ class Chat:
     # Constructor
     def __init__(self, messages):
         self.messages = messages  # Chat history (both prompts and responses)
+        self.timestamp = datetime.datetime.now()  # Timestamp for last edit
+        
+        num = 0
+        # Tally the number of files in ChatLogs to get new id
+        for element in os.listdir('ChatLogs/'):
+            element_path = os.path.join('ChatLogs/', element)
+            if os.path.isfile(element_path):
+                num += 1
+        self.chat_id = num + 1
+
+        # Assign the associated save file based on the chat id
+        self.associated_file = 'ChatLogs/chatlog_' + str(self.chat_id) + '.txt'
 
     # Add a new message (prompt or response) to messages
     def add_message(self, messages):
         self.messages = messages
+        self.update_timestamp()
+        update_chat_log(self)
 
-# Create an empty placeholder Chat object
-current_chat = Chat("")
+    # Update the timestamp to current time
+    def update_timestamp(self):
+        self.timestamp = datetime.datetime.now()
 
 # Response generation
 def generate_response(prompt, history):
@@ -62,12 +53,24 @@ def generate_response(prompt, history):
 # Create new chat
 def new_chat():
 
+    if 'current_chat' in globals():
+        update_chat_log(current_chat)
+
     # Clear the session state messages
     st.session_state.messages = []
 
     # Create and return a new chat
     chat = Chat(st.session_state.messages)
     return chat    
+
+# Update the chat log of current chat
+def update_chat_log(chat):
+    chat.update_timestamp()
+    f = open(chat.associated_file, 'w')
+    f.write(str(chat.timestamp))
+    messages = chat.messages
+    f.write('\n' + str(messages))
+    f.close()
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -79,6 +82,7 @@ st.image('RSLogo.png')
 # Application title
 st.title("Generative AI Coding Chat")
 
+# Empty llm list for storing llms
 llm_list = []
 
 # Open the llm file and save each llm to llm_list
@@ -95,35 +99,13 @@ for option in llm_list:
 # Select the llm
 select = st.selectbox("Select Model: ", llm_list)
 
+# Create and name tabs
 tab1, tab2 = st.tabs(["Chat", "Download Models"])
-
-with tab2:
-    # Allow user to download a new model
-    new_model = st.chat_input("Download a new model?")
-    if new_model:
-        # Use download function from download_model.py
-        status = download(new_model)
-        # Wait for model to download with a 30 minute timeout
-        with st.spinner('Generating reponse...'):
-            wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
-            # Write model name to a new file
-            f = open('model_list.txt', 'a')
-            f.write("\n" + new_model)
-            f.close()
-
-# Ensure that the model variation is latest
-# selected_model = select + ":latest"
-
-# -Deletion involves a different call and will be handled later
-# -Model updating should be looked into as well
-# -Finding a way to automatically find which models ollama offers, as well as information
-#   about them should be researched.
-# -An alternate way of downloading and loading llms may also be useful, although Ollama
-#   seems to be the most practical at the time being. Having multiple options can not hurt.
 
 # Save the llm as an Ollama object
 llm = Ollama(model = select)
 
+# In the chat tab:
 with tab1:
     # Prompt the user 
     prompt = st.chat_input("Enter prompt:")
@@ -137,6 +119,9 @@ with tab1:
 
     # After the user hits enter or clicks the send button
     if prompt:
+
+        if 'current_chat' not in globals():
+            current_chat = Chat("")
 
         # Start the response timer
         start_time = time.time()
@@ -170,3 +155,45 @@ with tab1:
 
         # Print currently store chat messages
         st.info(current_chat.messages)
+
+# In the model management tab:
+with tab2:
+
+    # Allow user to download a new model
+    new_model = st.chat_input("Download a new model? [model-name:version]")
+    if new_model:
+        with st.spinner('Downloading ' + new_model + "..."):
+            # Use download function from download_model.py
+            status = download(new_model)
+            # Wait for model to download with a 30 minute timeout
+            wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
+            # Write model name to a model list text file
+            f = open('model_list.txt', 'a')
+            f.write("\n" + new_model)
+            f.close()
+        if status:
+            st.success('Done!')
+        else:
+            st.faulure('Problem downloading model')
+
+    # Remove model button
+    if st.button("REMOVE CURRENTLY SELECTED MODEL", key="button2"):
+        with st.spinner('Removing ' + select + "..."):
+            # Use remove function to remove currently selected model
+            status = remove(select)
+        if status:
+            st.success('Done!')
+        else:
+            st.faulure('Could not remove')
+
+# In the sidebar:     
+with st.sidebar:
+    num = 0
+    for element in os.listdir('ChatLogs/'):
+        f = open('ChatLogs/' + element, 'r')
+        lines = f.readlines()
+        st.write(lines)
+        
+
+
+

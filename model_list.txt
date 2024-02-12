@@ -1,4 +1,1 @@
 deepseek-coder:latest
-tinyllama:latest
-llama2:latest
-tinydolphin:latest
