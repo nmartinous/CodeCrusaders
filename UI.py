@@ -18,26 +18,29 @@ class Chat:
         self.messages = messages  # Chat history (both prompts and responses)
         self.timestamp = datetime.datetime.now()  # Timestamp for last edit
         
-        num = 0
-        # Tally the number of files in ChatLogs to get new id
-        for element in os.listdir('ChatLogs/'):
-            element_path = os.path.join('ChatLogs/', element)
-            if os.path.isfile(element_path):
-                num += 1
-        self.chat_id = num + 1
-
-        # Assign the associated save file based on the chat id
-        self.associated_file = 'ChatLogs/chatlog_' + str(self.chat_id) + '.txt'
+        f = open('chat_ids.txt','r')
+        lines = f.readlines()
+        self.chat_id = len(lines)
+        f.close()
 
     # Add a new message (prompt or response) to messages
     def add_message(self, messages):
         self.messages = messages
         self.update_timestamp()
-        update_chat_log(self)
+        self.update_chat_log()
 
     # Update the timestamp to current time
     def update_timestamp(self):
         self.timestamp = datetime.datetime.now()
+
+    # Update the chat log of current chat
+    def update_chat_log(self):
+        self.update_timestamp()
+        f = open('ChatLogs/chatlog_' + str(self.chat_id) + '.txt', 'w')
+        f.write(str(self.timestamp))
+        messages = self.messages
+        f.write('\n' + str(messages))
+        f.close()
 
 # Response generation
 def generate_response(prompt, history):
@@ -53,8 +56,12 @@ def generate_response(prompt, history):
 # Create new chat
 def new_chat():
 
+    f = open('chat_ids.txt','a')
+    f.write("X\n")
+    f.close()
+
     if 'current_chat' in globals():
-        update_chat_log(current_chat)
+        current_chat.update_chat_log()
 
     # Clear the session state messages
     st.session_state.messages = []
@@ -62,15 +69,6 @@ def new_chat():
     # Create and return a new chat
     chat = Chat(st.session_state.messages)
     return chat    
-
-# Update the chat log of current chat
-def update_chat_log(chat):
-    chat.update_timestamp()
-    f = open(chat.associated_file, 'w')
-    f.write(str(chat.timestamp))
-    messages = chat.messages
-    f.write('\n' + str(messages))
-    f.close()
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -100,7 +98,7 @@ for option in llm_list:
 select = st.selectbox("Select Model: ", llm_list)
 
 # Create and name tabs
-tab1, tab2 = st.tabs(["Chat", "Download Models"])
+tab1, tab2 = st.tabs(["Chat", "Model Manager"])
 
 # Save the llm as an Ollama object
 llm = Ollama(model = select)
@@ -114,7 +112,7 @@ with tab1:
     st.write("")
 
     # New chat button
-    if st.button("CLEAR HISTORY", key="button"):
+    if st.button("NEW CHAT", key="button"):
         current_chat = new_chat()
 
     # After the user hits enter or clicks the send button
@@ -169,12 +167,15 @@ with tab2:
             wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
             # Write model name to a model list text file
             f = open('model_list.txt', 'a')
-            f.write("\n" + new_model)
+            f.write(new_model)
             f.close()
         if status:
             st.success('Done!')
         else:
             st.faulure('Problem downloading model')
+        time.sleep(2)
+        st.rerun()
+
 
     # Remove model button
     if st.button("REMOVE CURRENTLY SELECTED MODEL", key="button2"):
@@ -185,6 +186,8 @@ with tab2:
             st.success('Done!')
         else:
             st.faulure('Could not remove')
+        time.sleep(2)
+        st.rerun()
 
 # In the sidebar:     
 with st.sidebar:
@@ -192,7 +195,9 @@ with st.sidebar:
     for element in os.listdir('ChatLogs/'):
         f = open('ChatLogs/' + element, 'r')
         lines = f.readlines()
-        st.write(lines)
+        c = st.container()
+        with st.chat_message(lines[1]):
+            st.markdown(lines[1])
         
 
 

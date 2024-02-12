@@ -25,5 +25,3 @@ def remove(model_name):
                     return True
                 else:
                     return False
-            else:
-                return False
