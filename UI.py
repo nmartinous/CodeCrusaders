@@ -95,17 +95,21 @@ for option in llm_list:
 # Select the llm
 select = st.selectbox("Select Model: ", llm_list)
 
-# Allow user to download a new model
-new_model = st.chat_input("Download a new model?")
-if new_model:
-    # Use download function from download_model.py
-    status = download(new_model)
-    # Wait for model to download with a 30 minute timeout
-    wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
-    # Write model name to a new file
-    f = open('model_list.txt', 'a')
-    f.write("\n" + new_model)
-    f.close()
+tab1, tab2 = st.tabs(["Chat", "Download Models"])
+
+with tab2:
+    # Allow user to download a new model
+    new_model = st.chat_input("Download a new model?")
+    if new_model:
+        # Use download function from download_model.py
+        status = download(new_model)
+        # Wait for model to download with a 30 minute timeout
+        with st.spinner('Generating reponse...'):
+            wait(lambda: status, timeout_seconds = 1800, waiting_for="download")
+            # Write model name to a new file
+            f = open('model_list.txt', 'a')
+            f.write("\n" + new_model)
+            f.close()
 
 # Ensure that the model variation is latest
 # selected_model = select + ":latest"
@@ -120,48 +124,49 @@ if new_model:
 # Save the llm as an Ollama object
 llm = Ollama(model = select)
 
-# Prompt the user 
-prompt = st.chat_input("Enter prompt:")
-response = ""
-st.write("")
-st.write("")
+with tab1:
+    # Prompt the user 
+    prompt = st.chat_input("Enter prompt:")
+    response = ""
+    st.write("")
+    st.write("")
 
-# New chat button
-if st.button("CLEAR HISTORY", key="button"):
-    current_chat = new_chat()
+    # New chat button
+    if st.button("CLEAR HISTORY", key="button"):
+        current_chat = new_chat()
 
-# After the user hits enter or clicks the send button
-if prompt:
+    # After the user hits enter or clicks the send button
+    if prompt:
 
-    # Start the response timer
-    start_time = time.time()
-    
-    # Add the prompt to the chat history as a user prompt
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    # Update current chat's message history
-    current_chat.add_message(st.session_state.messages)
-
-    with st.spinner('Generating reponse...'):
-        # Use generate_response method to create a response
-        response = generate_response(prompt, st.session_state.messages)
-
-        # Add the response to the chat history as an assistant response
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        # Start the response timer
+        start_time = time.time()
+        
+        # Add the prompt to the chat history as a user prompt
+        st.session_state.messages.append({"role": "user", "content": prompt})
 
         # Update current chat's message history
         current_chat.add_message(st.session_state.messages)
 
-        # Display chat messages from history, as well as new response
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        with st.spinner('Generating reponse...'):
+            # Use generate_response method to create a response
+            response = generate_response(prompt, st.session_state.messages)
 
-    # End the response timer, evaluate time to finsish, and output result
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    time_message = f"Model took {elapsed_time} seconds to respond"
-    st.success(time_message)
+            # Add the response to the chat history as an assistant response
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # Print currently store chat messages
-    st.info(current_chat.messages)
+            # Update current chat's message history
+            current_chat.add_message(st.session_state.messages)
+
+            # Display chat messages from history, as well as new response
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+
+        # End the response timer, evaluate time to finsish, and output result
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        time_message = f"Model took {elapsed_time} seconds to respond"
+        st.success(time_message)
+
+        # Print currently store chat messages
+        st.info(current_chat.messages)
