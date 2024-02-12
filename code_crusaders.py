@@ -1,10 +1,12 @@
 import importlib.util
 import os
 
+# Dependencies to check/download
 package_names = ['streamlit', 'langchain_community', 'waiting']
 
 print ("--- Checking for dependencies ---")
 
+# Check if dependency is present and download if not
 for package in package_names:
     spec = importlib.util.find_spec(package)
     if spec is None:
@@ -17,10 +19,13 @@ for package in package_names:
 
 print ("\n--- Checking for Ollama ---")
 
+# Path for ollama installation
 path = '/usr/local/bin/ollama'
 
+# Check if ollama is present
 isExisting = os.path.exists(path)
 
+# If ollma is not present, install it
 if isExisting == False:
     print("Ollama is not installed")
     print("installing Ollama")
@@ -30,5 +35,7 @@ else:
     print("Ollama is installed")
 
 print ("\n--- Running WebUI ---")
+
+# Run the main script using a system call
 call = 'streamlit run UI.py'
 os.system(call)

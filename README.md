@@ -19,4 +19,4 @@ Planned Features:
 - Create a way to compare two or more models by running them side by side with the same prompt
 
 Installation Guide (Will be turned into full document at a later date):
-- run 'python3 code_crusaders.py' to check for/install dependencies and run ui
+- run 'python code_crusaders.py' to check for/install dependencies and run ui
