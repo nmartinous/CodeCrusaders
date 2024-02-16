@@ -3,6 +3,7 @@ import time
 import os.path
 import streamlit as st 
 from langchain_community.llms import Ollama
+from langchain.callbacks import get_openai_callback
 from waiting import wait
 
 # Import script for downloading models
@@ -51,7 +52,9 @@ def generate_response(prompt, history):
         prompt_chain += " " + log["content"]
 
     # Return the response from the llm
-    return llm.invoke(prompt_chain)
+    with get_openai_callback() as cb:
+        result = llm.invoke(prompt_chain)
+    return result, cb
 
 # Create new chat
 def new_chat():
@@ -132,7 +135,7 @@ with tab1:
 
         with st.spinner('Generating reponse...'):
             # Use generate_response method to create a response
-            response = generate_response(prompt, st.session_state.messages)
+            response, callback = generate_response(prompt, st.session_state.messages)
 
             # Add the response to the chat history as an assistant response
             st.session_state.messages.append({"role": "assistant", "content": response})
@@ -152,7 +155,9 @@ with tab1:
         st.success(time_message)
 
         # Print currently store chat messages
-        st.info(current_chat.messages)
+        #st.info(current_chat.messages)
+
+        st.info(callback)
 
 # In the model management tab:
 with tab2:
@@ -189,16 +194,16 @@ with tab2:
         time.sleep(2)
         st.rerun()
 
+
 # In the sidebar:     
-with st.sidebar:
-    num = 0
-    for element in os.listdir('ChatLogs/'):
-        f = open('ChatLogs/' + element, 'r')
-        lines = f.readlines()
-        c = st.container()
-        with st.chat_message(lines[1]):
-            st.markdown(lines[1])
-        
+#with st.sidebar:
+#    num = 0
+#    for element in os.listdir('ChatLogs/'):
+#        f = open('ChatLogs/' + element, 'r')
+#        lines = f.readlines()
+#        c = st.container()
+#        with st.chat_message(lines[1]):
+#            st.markdown(lines[1])     
 
 
 

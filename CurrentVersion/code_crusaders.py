@@ -2,7 +2,7 @@ import importlib.util
 import os
 
 # Dependencies to check/download
-package_names = ['streamlit', 'langchain_community', 'waiting']
+package_names = ['streamlit', 'langchain_community', 'waiting', 'ollama']
 
 print ("--- Checking for dependencies ---")
 
