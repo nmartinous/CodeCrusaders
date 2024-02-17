@@ -1,5 +1,12 @@
+# IMPORTS
+# ------------------------------------------------------
+
 from ollama import chat
 import streamlit as st 
+
+########################################################
+# TITLE AND LOGO
+# ------------------------------------------------------
 
 # Company logo
 st.image('RSLogo.png')
@@ -8,8 +15,10 @@ st.image('RSLogo.png')
 st.title('Generative AI Coding Chat')
 
 ########################################################
+# CREATE AND MANAGE CHAT HISTORY
+# ------------------------------------------------------
 
-# Initialize chat history
+# Initialize chat history if one does not exist
 if 'chat_history' not in st.session_state:
   st.session_state.chat_history = []
 
@@ -30,7 +39,7 @@ if 'chat_history' not in st.session_state:
 
 ########################################################
 # ACCESS DOWNLOADED MODELS AND ALLOW USER TO SELECT ONE
-# -----------------------------------------------------
+# ------------------------------------------------------
 
 # Empty llm list for storing llms
 llm_list = []
@@ -46,10 +55,12 @@ for option in llm_list:
     llm_list[index] = option.strip().replace('\n', '')
     index += 1
 
-# Select the llm
+# Select the llm with a dropdown
 model = st.selectbox('Select Model: ', llm_list)
 
 ########################################################
+# TAB STRUCTURE
+# ------------------------------------------------------
 
 # Create and name tabs
 tab1, tab2 = st.tabs(['Chat', 'Model Manager'])
@@ -64,8 +75,12 @@ with tab1:
 
     # After the user hits enter 
     if prompt:
+        # Add the prompt to chat history
         st.session_state.chat_history.append({'role': 'user', 'content': prompt})
+        # Generate a response using the full chat history
         response = chat(model, messages=st.session_state.chat_history)
+        # Display the response
         st.markdown(response['message']['content'])
+        # Add the response to the chat history
         st.session_state.chat_history.append(response['message'])
 
