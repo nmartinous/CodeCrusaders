@@ -1,1 +1,2 @@
 deepseek-coder:latest
+tinyllama:latest

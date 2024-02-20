@@ -2,7 +2,7 @@ import importlib.util
 import os
 
 # Dependencies to check/download
-package_names = ['streamlit', 'langchain_community', 'waiting', 'ollama']
+package_names = ['streamlit', 'langchain_community', 'waiting', 'ollama', 'tqdm']
 
 print ("--- Checking for dependencies ---")
 
@@ -16,6 +16,12 @@ for package in package_names:
         os.system(call)
     else:
         print(package + " installed")
+
+        # Uncomment below to add auto-updates
+
+        #print(package + " installed, updating if needed")
+        #call = 'pip install ' + package + ' --upgrade --break-system-packages'
+        #os.system(call)
 
 print ("\n--- Checking for Ollama ---")
 
