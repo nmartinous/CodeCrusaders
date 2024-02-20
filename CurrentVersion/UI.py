@@ -89,15 +89,41 @@ with tab1:
             st.markdown(response['message']['content'])
             # Add the response to the chat history
             st.session_state.chat_history.append(response['message'])
+
+            # Generate run stats
+            total_time = round(response['total_duration']/1000000000, 2)
+            load_time = round(response['load_duration']/1000000000, 2)
+            if "prompt_eval_count" in response:
+                prompt_tokens = response['prompt_eval_count']
+                prompt_eval = round(response['prompt_eval_duration']/1000000000, 2)
+                prompt_tps = round((response['prompt_eval_duration']/1000000000)/(response['prompt_eval_count']), 2)
+            else:
+                prompt_tokens = "DATA ERROR"
+                prompt_eval = "DATA ERROR"
+                prompt_tps = "DATA ERROR"
+            response_tokens = response['eval_count']
+            response_eval = round(response['eval_duration']/1000000000, 2)
+            response_tps = round((response['eval_duration']/1000000000)/(response['eval_count']), 2)
+
             # Output run stats
-            st.info('Total Response Time: ' + str(response['total_duration']/1000000000) 
-                    + '\n\nLoad Time: ' + str(response['load_duration']/1000000000)
-                    + '\n\nPrompt Evals: ' + str(response['prompt_eval_count']) 
-                    + '\n\nPrompt Eval Time: ' + str(response['prompt_eval_duration']/1000000000)
-                    + '\n\nPrompt Eval Tokens Per Second: ' + str((int(response['prompt_eval_duration']/1000000000))/int(response['prompt_eval_count']))
-                    + '\n\nEvals: ' + str(response['eval_count'])
-                    + '\n\nEval Time: ' + str(response['eval_duration']/1000000000)
-                    + '\n\nEval Tokens Per Second: ' + str((int(response['eval_duration']/1000000000))/int(response['eval_count'])))
+            if "prompt_eval_count" in response:
+                st.info('Total Response Time: ' + str(total_time) + ' seconds'
+                    + '\n\nLoad Time: ' + str(load_time) + ' seconds'
+                    + '\n\nPrompt Tokens: ' + str(prompt_tokens) 
+                    + '\n\nPrompt Eval Time: ' + str(prompt_eval) + ' seconds'
+                    + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
+                    + '\n\nResponse Tokens: ' + str(response_tokens)
+                    + '\n\nGeneration Time: ' + str(response_eval)
+                    + '\n\nPrompt Tokens Per Second: ' + str(response_tps))
+            else:
+                st.info('Total Response Time: ' + str(total_time) + ' seconds'
+                    + '\n\nLoad Time: ' + str(load_time) + ' seconds'
+                    + '\n\nPrompt Tokens: ' + str(prompt_tokens) 
+                    + '\n\nPrompt Eval Time: ' + str(prompt_eval)
+                    + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
+                    + '\n\nResponse Tokens: ' + str(response_tokens)
+                    + '\n\nGeneration Time: ' + str(response_eval)
+                    + '\n\nPrompt Tokens Per Second: ' + str(response_tps))
 
 
 ########################################################
