@@ -1,10 +1,13 @@
 # IMPORTS
 # ------------------------------------------------------
 
-import time
+from datetime import datetime
+import os
+import json
 import streamlit as st 
 from ollama import chat, pull
 from tqdm import tqdm
+from remove_model import remove
 
 ########################################################
 # TITLE AND LOGO
@@ -14,7 +17,7 @@ from tqdm import tqdm
 st.image('RSLogo.png')
 
 # Application title
-st.title('Generative AI Coding Chat')
+st.title('Generative Coding Chat')
 
 ########################################################
 # CREATE AND MANAGE CHAT HISTORY
@@ -61,6 +64,26 @@ for option in llm_list:
 model = st.selectbox('Select Model: ', llm_list)
 
 ########################################################
+# SAVE AND LOAD CHATS
+# ------------------------------------------------------
+
+# Save active chat history using timestamp
+def save_chat_history():
+    now = datetime.now()
+    filename = './chat_logs/' + str(now) + '.json'
+    if st.session_state.chat_history:  # Check if history exists
+        with open(filename, "w") as f:
+            json.dump(st.session_state.chat_history, f)
+
+# Load selected filename
+def load_chat_history(filename="./chat_logs/chat_history.json"):
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            st.session_state.chat_history = json.load(f)
+    else:
+        st.session_state.chat_history = []  # Initialize empty if no file
+
+########################################################
 # TAB STRUCTURE
 # ------------------------------------------------------
 
@@ -78,6 +101,14 @@ with tab1:
     st.write('')
     st.write('')
 
+    # Button to save chat
+    if st.button("Save Chat"):
+        save_chat_history()
+
+    uploaded_file = st.file_uploader("Choose a chat history file")
+    if uploaded_file:
+        load_chat_history(uploaded_file.name)  # Load from temporary file
+
     # After the user hits enter 
     if prompt:
         with st.spinner('Generating Response...'):
@@ -86,9 +117,13 @@ with tab1:
             # Generate a response using the full chat history
             response = chat(model, messages=st.session_state.chat_history)
             # Display the response
-            st.markdown(response['message']['content'])
+            #st.markdown(response['message']['content'])
             # Add the response to the chat history
             st.session_state.chat_history.append(response['message'])
+
+            for message in st.session_state.chat_history:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
 
             # Generate run stats
             total_time = round(response['total_duration']/1000000000, 2)
@@ -107,23 +142,23 @@ with tab1:
 
             # Output run stats
             if "prompt_eval_count" in response:
-                st.info('Total Response Time: ' + str(total_time) + ' seconds'
-                    + '\n\nLoad Time: ' + str(load_time) + ' seconds'
+                st.success('Total Response Time: ' + str(total_time) + ' seconds'
+                           + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
+                           + '\n\nGenerated Tokens Per Second: ' + str(response_tps))
+                st.info('Load Time: ' + str(load_time) + ' seconds'
                     + '\n\nPrompt Tokens: ' + str(prompt_tokens) 
                     + '\n\nPrompt Eval Time: ' + str(prompt_eval) + ' seconds'
-                    + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
                     + '\n\nResponse Tokens: ' + str(response_tokens)
-                    + '\n\nGeneration Time: ' + str(response_eval)
-                    + '\n\nPrompt Tokens Per Second: ' + str(response_tps))
+                    + '\n\nGeneration Time: ' + str(response_eval))
             else:
-                st.info('Total Response Time: ' + str(total_time) + ' seconds'
-                    + '\n\nLoad Time: ' + str(load_time) + ' seconds'
+                st.success('Total Response Time: ' + str(total_time) + ' seconds'
+                           + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
+                           + '\n\nGenerated Tokens Per Second: ' + str(response_tps))
+                st.info('Load Time: ' + str(load_time) + ' seconds'
                     + '\n\nPrompt Tokens: ' + str(prompt_tokens) 
                     + '\n\nPrompt Eval Time: ' + str(prompt_eval)
-                    + '\n\nPrompt Tokens Per Second: ' + str(prompt_eval)
                     + '\n\nResponse Tokens: ' + str(response_tokens)
-                    + '\n\nGeneration Time: ' + str(response_eval)
-                    + '\n\nPrompt Tokens Per Second: ' + str(response_tps))
+                    + '\n\nGeneration Time: ' + str(response_eval))
 
 
 ########################################################
@@ -133,28 +168,37 @@ with tab1:
 with tab2:
     new_model = st.chat_input("Download a new model? [model-name:version]")
     if new_model:
+        with st.spinner('Downloading ' + new_model + '...'):
+            current_digest, bars = '', {}
+            for progress in pull(new_model, stream=True):
+                digest = progress.get('digest', '')
+                if digest != current_digest and current_digest in bars:
+                    bars[current_digest].close()
 
-        current_digest, bars = '', {}
-        for progress in pull(new_model, stream=True):
-            digest = progress.get('digest', '')
-            if digest != current_digest and current_digest in bars:
-                bars[current_digest].close()
+                if not digest:
+                    print(progress.get('status'))
+                    continue
 
-            if not digest:
-                print(progress.get('status'))
-                continue
+                if digest not in bars and (total := progress.get('total')):
+                    bars[digest] = tqdm(total=total, desc=f'pulling {digest[7:19]}', unit='B', unit_scale=True)
 
-            if digest not in bars and (total := progress.get('total')):
-                bars[digest] = tqdm(total=total, desc=f'pulling {digest[7:19]}', unit='B', unit_scale=True)
+                if completed := progress.get('completed'):
+                    bars[digest].update(completed - bars[digest].n)
 
-            if completed := progress.get('completed'):
-                bars[digest].update(completed - bars[digest].n)
+                current_digest = digest
+            
+            f = open('model_list.txt', 'a')
+            f.write(new_model + '\n')
+            f.close()
 
-            current_digest = digest
-        
-        f = open('model_list.txt', 'a')
-        f.write(new_model + '\n')
-        f.close()
+            st.rerun()
 
+    if st.button('REMOVE CURRENTLY SELECTED MODEL'):
+        remove(model)
         st.rerun()
+
+with st.sidebar:
+    pass
+
+    
 

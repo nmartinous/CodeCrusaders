@@ -9,7 +9,7 @@ from waiting import wait
 # Import script for downloading models
 from download_model import download
 # Import script for removing models
-from remove_model import remove
+from CurrentVersion.remove_model import remove
 
 # For storing and handling past chats
 class Chat:
